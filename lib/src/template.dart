@@ -161,21 +161,29 @@ class Template {
       }
 
       // Make sure we have a coinbase.
-      coinbaseData = coinbase!.getData(extranonce);
+      if (coinbase != null) {
+        coinbaseData = coinbase.getData(extranonce);
 
-      var templateTransactions = template['transactions'] as List<dynamic>;
-      print('templateTransactions: $templateTransactions');
-      templateTransactions
-          .insert(0, {'data': coinbaseData, 'hash': doubleHash(coinbaseData)});
+        // Ensure template['transactions'] is initialized as a list
+        if (template['transactions'] == null) {
+          template['transactions'] = [];
+        }
 
-      // Set the nonce to 0.
-      template['nonce'] = nonce;
+        template['transactions'].insert(
+            0, {'data': coinbaseData, 'hash': doubleHash(coinbaseData)});
 
-      // Create a new block from the template.
-      block = new Block.fromTemplate(template);
+        // Set the nonce to 0.
+        template['nonce'] = nonce;
 
-      // Return that we have more work to do.
-      return true;
+        // Create a new block from the template.
+        block = new Block.fromTemplate(template);
+
+        // Return that we have more work to do.
+        return true;
+      } else {
+        print("Error: Unable to create coinbase.");
+        return false;
+      }
     }
 
     // Return that work has been done.
