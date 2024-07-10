@@ -152,6 +152,7 @@ class Template {
                 template['result']['coinbaseaux']['flags'] ?? '',
                 template['result']['coinbasevalue'],
                 address);
+            print('coinbase: $coinbase');
           } else {
             // Throw an error.
             throw ("You must define a bitcoin address to create coinbase.");
