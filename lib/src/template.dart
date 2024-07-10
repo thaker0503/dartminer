@@ -137,51 +137,61 @@ class Template {
 
     // See if there is more work to do.
     if (workLeft() && timeLeft()) {
-      // Create the coinbase if it hasn't already been created.
-      if (coinbase == null) {
-        // Check to see if the template has the actual coinbase txn.
-        if (template['result'].containsKey('coinbasetxn')) {
-          // Create the coinbase from existing data.
-          coinbase =
-              new Coinbase.fromData(template['result']['coinbasetxn']['data']);
-        } else if (template['result'].containsKey('coinbaseaux')) {
-          // We must have a bitcoin address to create a coinbase with address.
-          if (address != '') {
-            // Create a new coinbase from the aux, value and bitcoin address.
-            coinbase = new Coinbase(
-                template['result']['coinbaseaux']['flags'] ?? '',
-                template['result']['coinbasevalue'],
-                address);
-            print('coinbase: $coinbase');
+      try {
+        // Create the coinbase if it hasn't already been created.
+        if (coinbase == null) {
+          // Check to see if the template has the actual coinbase txn.
+          if (template['result'].containsKey('coinbasetxn')) {
+            // Create the coinbase from existing data.
+            coinbase = new Coinbase.fromData(
+                template['result']['coinbasetxn']['data']);
+          } else if (template['result'].containsKey('coinbaseaux')) {
+            // We must have a bitcoin address to create a coinbase with address.
+            if (address != '') {
+              // Create a new coinbase from the aux, value and bitcoin address.
+              coinbase = new Coinbase(
+                  template['result']['coinbaseaux']['flags'] ?? '',
+                  template['result']['coinbasevalue'],
+                  address);
+              print('coinbase: $coinbase');
+            } else {
+              throw ("You must define a bitcoin address to create coinbase.");
+            }
           } else {
-            // Throw an error.
-            throw ("You must define a bitcoin address to create coinbase.");
+            throw ("Template does not contain required coinbase information.");
           }
         }
-      }
 
-      // Make sure we have a coinbase.
-      if (coinbase != null) {
-        coinbaseData = coinbase.getData(extranonce);
+        // Make sure we have a coinbase.
+        if (coinbase != null) {
+          coinbaseData = coinbase.getData(extranonce);
 
-        // Ensure template['transactions'] is initialized as a list
-        if (template['transactions'] == null) {
-          template['transactions'] = [];
+          // Ensure template and template['transactions'] are properly initialized
+          if (template == null) {
+            template = {};
+          }
+          if (template['transactions'] == null) {
+            template['transactions'] = [];
+          }
+
+          // Insert the coinbase transaction
+          template['transactions'].insert(
+              0, {'data': coinbaseData, 'hash': doubleHash(coinbaseData)});
+
+          // Set the nonce to 0.
+          template['nonce'] = nonce;
+
+          // Create a new block from the template.
+          block = new Block.fromTemplate(template);
+
+          // Return that we have more work to do.
+          return true;
+        } else {
+          print("Error: Unable to create coinbase.");
+          return false;
         }
-
-        template['transactions'].insert(
-            0, {'data': coinbaseData, 'hash': doubleHash(coinbaseData)});
-
-        // Set the nonce to 0.
-        template['nonce'] = nonce;
-
-        // Create a new block from the template.
-        block = new Block.fromTemplate(template);
-
-        // Return that we have more work to do.
-        return true;
-      } else {
-        print("Error: Unable to create coinbase.");
+      } catch (e) {
+        print("Error in createBlock: $e");
         return false;
       }
     }
