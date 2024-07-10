@@ -27,16 +27,26 @@ class Coinbase {
     buffer.write('01');
 
     // input[0] prev hash
-    buffer.write('0000000000000000000000000000000000000000000000000000000000000000');
+    buffer.write(
+        '0000000000000000000000000000000000000000000000000000000000000000');
 
     // input[0] prev seqnum
     buffer.write('ffffffff');
 
-    // input[0] script length;
-    buffer.write(int2VarIntHex(script.length ~/ 2));
+    // Handle the case where script might be empty
+    if (script.isNotEmpty) {
+      // input[0] script length;
+      buffer.write(int2VarIntHex(script.length ~/ 2));
 
-    // input[0] script
-    buffer.write(script);
+      // input[0] script
+      buffer.write(script);
+    } else {
+      // If script is empty, write a minimal script
+
+      buffer.write('01'); // script length of 1 byte
+
+      buffer.write('00'); // OP_0 (empty script)
+    }
 
     // input[0] seqnum
     buffer.write('ffffffff');

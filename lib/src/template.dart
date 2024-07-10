@@ -31,7 +31,8 @@ class Template {
   /**
    * Create a new template from JSON.
    */
-  Template.fromJSON(dynamic this.template, {int this.extranonce = 0, String this.address = ''}) {
+  Template.fromJSON(dynamic this.template,
+      {int this.extranonce = 0, String this.address = ''}) {
     // Set the created timestamp.
     created = now();
 
@@ -68,7 +69,8 @@ class Template {
    */
   bool workLeft() {
     // If these mutations are not available, then always return true.
-    if (!mutations.containsKey('coinbase/append') && !mutations.containsKey('coinbase')) {
+    if (!mutations.containsKey('coinbase/append') &&
+        !mutations.containsKey('coinbase')) {
       return true;
     }
 
@@ -87,7 +89,8 @@ class Template {
     // Iterate while we are still creating blocks.
     while (createBlock()) {
       // Create the miner.
-      miner = new Miner.fromHeader(block.getHeader(false), block.target, nonce: nonce, expires: (expires! - (now() - created)));
+      miner = new Miner.fromHeader(block.getHeader(false), block.target,
+          nonce: nonce, expires: (expires! - (now() - created)));
 
       // Mine for gold.
       result = miner.mine(false);
@@ -139,12 +142,16 @@ class Template {
         // Check to see if the template has the actual coinbase txn.
         if (template['result'].containsKey('coinbasetxn')) {
           // Create the coinbase from existing data.
-          coinbase = new Coinbase.fromData(template['result']['coinbasetxn']['data']);
+          coinbase =
+              new Coinbase.fromData(template['result']['coinbasetxn']['data']);
         } else if (template['result'].containsKey('coinbaseaux')) {
           // We must have a bitcoin address to create a coinbase with address.
           if (address != '') {
             // Create a new coinbase from the aux, value and bitcoin address.
-            coinbase = new Coinbase(template['result']['coinbaseaux']['flags'], template['result']['coinbasevalue'], address);
+            coinbase = new Coinbase(
+                template['result']['coinbaseaux']['flags'] ?? '',
+                template['result']['coinbasevalue'],
+                address);
           } else {
             // Throw an error.
             throw ("You must define a bitcoin address to create coinbase.");
@@ -154,7 +161,8 @@ class Template {
 
       // Make sure we have a coinbase.
       coinbaseData = coinbase!.getData(extranonce);
-      template['transactions'].insert(0, {'data': coinbaseData, 'hash': doubleHash(coinbaseData)});
+      template['transactions']
+          .insert(0, {'data': coinbaseData, 'hash': doubleHash(coinbaseData)});
 
       // Set the nonce to 0.
       template['nonce'] = nonce;
