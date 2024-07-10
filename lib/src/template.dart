@@ -162,7 +162,10 @@ class Template {
 
       // Make sure we have a coinbase.
       coinbaseData = coinbase!.getData(extranonce);
-      template['transactions']
+
+      var templateTransactions = template['transactions'] as List<dynamic>;
+      print('templateTransactions: $templateTransactions');
+      templateTransactions
           .insert(0, {'data': coinbaseData, 'hash': doubleHash(coinbaseData)});
 
       // Set the nonce to 0.
